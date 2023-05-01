@@ -61,7 +61,7 @@ def get_user_data(vk_user_session, user_id):
 
     return res
 
-def get_users_search(vk_user_session: vk_api.VkApi, offset=0, count=100, fields='bdate,city,sex', city=None, hometown=None, sex=0, age_from=18, age_to=30, has_photo=True):
+def get_users_search(vk_user_session: vk_api.VkApi, offset=0, count=100, fields='bdate,city,sex', city=None, hometown=None, sex=0, age_from=18, age_to=30, has_photo=True, status=1):
     data = vk_user_session.method(
         method='users.search',
         values={
@@ -75,6 +75,7 @@ def get_users_search(vk_user_session: vk_api.VkApi, offset=0, count=100, fields=
             'age_from': age_from,
             'age_to': age_to,
             'has_photo': has_photo,
+            'status': status
         }
     )
 
