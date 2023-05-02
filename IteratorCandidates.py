@@ -16,14 +16,14 @@ class IteratorCandidates:
     def __init__(self, vk_user_session, user_id: int, count=100):
         self.vk_user_session = vk_user_session
         self.user_data = get_user_data(vk_user_session, user_id)
-
+        
         try:
             bdate_year = datetime.strptime(self.user_data['bdate'], '%d.%m.%Y').year
             date_now = datetime.today().year
             user_age = date_now - bdate_year
             age_from = user_age - 5
             age_to = user_age + 5
-
+            
         except ValueError:
             age_from = 18
             age_to = 30
@@ -34,7 +34,7 @@ class IteratorCandidates:
         self.sex = 1 if self.user_data['sex'] == 2 else 2
         self.age_from = age_from
         self.age_to = age_to
-
+        
         self.res = {
             'first_name': None,
             'last_name': None,
@@ -49,7 +49,7 @@ class IteratorCandidates:
         self.chunk = iter([])
 
     def __iter__(self):
-
+        
         return self
 
     def __next__(self):
@@ -58,10 +58,10 @@ class IteratorCandidates:
 
         try:
             candidate = next(self.chunk)
-
+            
         except StopIteration:
             self.offset += self.count
-
+            
             self.candidate_list = get_users_search(
                 vk_user_session=self.vk_user_session,
                 offset=self.offset,
@@ -86,15 +86,15 @@ class IteratorCandidates:
         self.res['vk_id'] = candidate['id']
         self.res['vk_link'] = 'https://vk.com/id' + str(candidate['id'])
         self.res['photos_ids'] = get_profile_photos_ids(vk_user_session=self.vk_user_session, owner_id=candidate['id'])
-
+        
         return self.res
-
+    
 
 if __name__ == '__main__':
-
+    
     vk_user = vk_api.VkApi(token=MY_TOKEN)
-
-    cand = IteratorCandidates(count=100, hometown='Казань', sex=1, age_from=24, age_to=34)
-
+    
+    cand = IteratorCandidates(count=3, hometown='Казань', sex=1, age_from=24, age_to=34)
+    
     for item in cand:
         pprint(item)
