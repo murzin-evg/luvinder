@@ -55,17 +55,17 @@ def main_keyboard():
         color=VkKeyboardColor.SECONDARY
     )
 
-    keyboard.add_line()
+    # keyboard.add_line()
 
-    keyboard.add_button(
-        label='Удалить из Избранных',
-        color=VkKeyboardColor.PRIMARY
-    )
+    # keyboard.add_button(
+    #     label='Удалить из Избранных',
+    #     color=VkKeyboardColor.PRIMARY
+    # )
 
-    keyboard.add_button(
-        label='Удалить из Черного списка',
-        color=VkKeyboardColor.PRIMARY
-    )
+    # keyboard.add_button(
+    #     label='Удалить из Черного списка',
+    #     color=VkKeyboardColor.PRIMARY
+    # )
 
     keyboard.add_line()
     

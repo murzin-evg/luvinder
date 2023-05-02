@@ -10,8 +10,6 @@ from keyboards import main_keyboard
 import vk_api
 
 
-
-
 def write_msg(vk_session, user_id, message, attachment=None, keyboard=None):
     """
     Метод отправляет сообщение собеседнику.
@@ -105,56 +103,6 @@ def get_profile_photos_ids(vk_user_session, owner_id: int) -> list:
     photos_ids = list(map(lambda photo: photo['id'], photos))
     
     return photos_ids
-
-
-def formation_of_candidates(vk_user_session, user_id: int, offset=0, count=100):
-    user_data = get_user_data(vk_user_session, user_id)
-    
-    try:
-        bdate_year = datetime.strptime(user_data['bdate'], '%d.%m.%Y').year
-        date_now = datetime.today().year
-        user_age = date_now - bdate_year
-        age_from = user_age - 5
-        age_to = user_age + 5
-    except ValueError:
-        age_from = 18
-        age_to = 30
-
-    users_search_data = get_users_search(
-        vk_user_session=vk_user_session,
-        offset=offset,
-        count=count,
-        hometown=user_data['city'],
-        sex=1 if user_data['sex'] == 2 else 2,
-        age_from=age_from,
-        age_to=age_to,
-    )
-
-    return users_search_data
-
-def candidate_generator(vk_user_session, candidates: list[dict]):
-    res = {
-        'first_name': None,
-        'last_name': None,
-        'sex': None,
-        'city': None,
-        'bdate': None,
-        'vk_id': None,
-        'vk_link': None,
-        'photos_ids': None
-    }
-
-    for candidate in candidates:
-        res['first_name'] = candidate['first_name']
-        res['last_name'] = candidate['last_name']
-        res['sex'] = 'женский' if candidate['sex'] == 1 else 'мужской'
-        res['city'] = candidate['city']['title'] if candidate.get('city') else 'Не указан'
-        res['bdate'] = candidate.get('bdate', 'Не указана')
-        res['vk_id'] = candidate['id']
-        res['vk_link'] = 'https://vk.com/id' + str(candidate['id'])
-        res['photos_ids'] = get_profile_photos_ids(vk_user_session=vk_user_session, owner_id=candidate['id'])
-
-        yield res
 
 
 def output_candidate(vk_session, user_id: int, candidate: dict):

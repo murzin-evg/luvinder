@@ -4,6 +4,7 @@ from sqlalchemy.orm import declarative_base, relationship, sessionmaker
 from sqlalchemy.orm import backref
 from auth_data import DSN
 
+
 Base = declarative_base()
 
 #Класс для создания таблицы пользователей
@@ -98,47 +99,33 @@ def check_in_favorite_list(user_vk_id, favorite_vk_id):
     q = session.query(user_favorite_list).filter(user_favorite_list.user_vk_id == user_vk_id,
                                           user_favorite_list.favorite_vk_id == favorite_vk_id).all()
     if q == []:
-        in_favorite_list = False
+        return False
     else:
-        in_favorite_list = True
-    return in_favorite_list
+        return True
 
 #Создаем экземпляр класса избранных (и сразу экземляр связующей таблицы) и сохраняем в БД
 def add_db_favorite(user_vk_id, favorite_vk_id,first_name, last_name, sex, bdate, city):
-    if check_in_favorite_list(user_vk_id,favorite_vk_id) == True:
-        print("Пользователь с введенным id уже добавлен в список Избранных")
-    else:
-        favorite = favorite_list(favorite_vk_id=favorite_vk_id, first_name=first_name,last_name=last_name,sex=sex,
-                                 bdate=bdate, city=city)
-        user_favorite = user_favorite_list(user_vk_id = user_vk_id,favorite_vk_id = favorite_vk_id)
-        session.add_all([favorite, user_favorite])
-        session.commit()
-
-    return
+    favorite = favorite_list(favorite_vk_id=favorite_vk_id, first_name=first_name,last_name=last_name,sex=sex,
+                                bdate=bdate, city=city)
+    user_favorite = user_favorite_list(user_vk_id = user_vk_id,favorite_vk_id = favorite_vk_id)
+    session.add_all([favorite, user_favorite])
+    session.commit()
 
 #Проверяем, находится ли кандидат в ЧС
 def check_in_black_list(user_vk_id, black_list_id):
     q = session.query(user_black_list).filter(user_black_list.user_vk_id == user_vk_id,
                                           user_black_list.black_list_id == black_list_id).all()
     if q == []:
-        in_black_list = False
+        return False
     else:
-        in_black_list = True
-
-    return in_black_list
+        return True
 
 #Создаем экземпляр класса черного списка (и сразу экземляр связующей таблицы) и сохраняем в БД
 def add_db_black_list(user_vk_id, black_list_id,first_name, last_name):
-    if check_in_black_list(user_vk_id, black_list_id) == True:
-        print("Пользователь с введенным id уже добавлен в Черный список")
-
-    else:
-        black = black_list(black_list_id=black_list_id, first_name=first_name, last_name=last_name)
-        user_black = user_black_list(user_vk_id = user_vk_id,black_list_id = black_list_id)
-        session.add_all([black, user_black])
-        session.commit()
-
-    return
+    black = black_list(black_list_id=black_list_id, first_name=first_name, last_name=last_name)
+    user_black = user_black_list(user_vk_id = user_vk_id,black_list_id = black_list_id)
+    session.add_all([black, user_black])
+    session.commit()
 
 # Печать по ID пользователя его списка избранных
 def get_db_favorites(user_vk_id):

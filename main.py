@@ -1,11 +1,11 @@
 # встроенные
 
 # собственные
-from auth_data import TEST_TOKEN, MY_TOKEN
+from auth_data import TEST_TOKEN, MY_TOKEN, VKINDER_TOKEN
 from funcs import write_msg, get_user_data, output_candidate
 from keyboards import start_keyboard, main_keyboard
 from IteratorCandidates import IteratorCandidates
-from ORM import add_db_user_bot, add_db_favorite, get_db_favorites, add_db_black_list, get_db_black_list, check_in_black_list
+from ORM import add_db_user_bot, add_db_favorite, get_db_favorites, add_db_black_list, get_db_black_list, check_in_black_list, check_in_favorite_list
 
 # установленные
 import vk_api
@@ -17,7 +17,7 @@ def main():
         if event.type == VkEventType.MESSAGE_NEW and event.to_me:
 
             request = event.text
-
+#  or event.message['payload'] == '{"command":"start"}'
             if request.lower() == "начать":
                 user_data = get_user_data(vk_user, event.user_id)
                 add_db_user_bot(
@@ -42,7 +42,7 @@ def main():
 
                 candidate = next(candidate_iter_obj)
 
-                while check_in_black_list(event.user_id, candidate['vk_id']) == True:
+                while check_in_black_list(event.user_id, candidate['vk_id']):
                         candidate = next(candidate_iter_obj)
 
                 output_candidate(vk_session=vk, user_id=event.user_id, candidate=candidate)
@@ -53,7 +53,7 @@ def main():
 
                             Основное меню состоит из следующих кнопок:
 
-                            “Начать поиск”
+                            "Начать поиск"
                             Поиск подходящих кандидатов начинается заново
                             
                             "Дальше"
@@ -87,7 +87,7 @@ def main():
 
                 try:
                     candidate = next(candidate_iter_obj)
-                    while check_in_black_list(event.user_id, candidate['vk_id']) == True:
+                    while check_in_black_list(event.user_id, candidate['vk_id']):
                         candidate = next(candidate_iter_obj)
 
                     output_candidate(vk_session=vk, user_id=event.user_id, candidate=candidate)
@@ -97,32 +97,43 @@ def main():
 
                     candidate = next(candidate_iter_obj)
 
+                    while check_in_black_list(event.user_id, candidate['vk_id']):
+                            candidate = next(candidate_iter_obj)
+
                     output_candidate(vk_session=vk, user_id=event.user_id, candidate=candidate)
 
             elif request == "Добавить в Избранные":
-                add_db_favorite(
-                    user_vk_id=event.user_id,  # int
-                    favorite_vk_id=candidate['vk_id'],  # int
-                    first_name=candidate['first_name'],  # VARCHAR(50)
-                    last_name=candidate['last_name'],  # VARCHAR(50)
-                    sex=candidate['sex']['id'],  # int
-                    bdate=candidate['bdate'],  # VARCHAR(10)
-                    city=candidate['city']['id']  # int
-                )
 
-                write_msg(
-                    vk_session=vk,
-                    user_id=event.user_id,
-                    message=f"{candidate['first_name']} {candidate['last_name']} (id{candidate['vk_id']}) добавлен в Избранные.",
-                    keyboard=main_keyboard(),
-                )
+                if check_in_favorite_list(event.user_id, candidate['vk_id']):
+                    write_msg(
+                        vk_session=vk,
+                        user_id=event.user_id,
+                        message=f"{candidate['first_name']} {candidate['last_name']} (id{candidate['vk_id']}) уже есть в списке Избранных.",
+                        keyboard=main_keyboard(),
+                    )
+                else:
+                    add_db_favorite(
+                        user_vk_id=event.user_id,  # int
+                        favorite_vk_id=candidate['vk_id'],  # int
+                        first_name=candidate['first_name'],  # VARCHAR(50)
+                        last_name=candidate['last_name'],  # VARCHAR(50)
+                        sex=candidate['sex']['id'],  # int
+                        bdate=candidate['bdate'],  # VARCHAR(10)
+                        city=candidate['city']['id']  # int
+                    )
+
+                    write_msg(
+                        vk_session=vk,
+                        user_id=event.user_id,
+                        message=f"{candidate['first_name']} {candidate['last_name']} (id{candidate['vk_id']}) добавлен в Избранные.",
+                        keyboard=main_keyboard(),
+                    )
 
             elif request == "Избранные":
                 # здесь делаем запрос к БД таблица favorite и выводим избранных пользователя с id=event.user_id. попутно джойним с таблицей user_favorite
                 user_favorites = get_db_favorites(user_vk_id=event.user_id)
                 message = """
                 ИЗБРАННЫЕ
-
                 """
                 count = 1
                 for favorite in user_favorites:
@@ -131,7 +142,6 @@ def main():
                     {count}.
                     Имя Фамилия: {favorite.first_name} {favorite.last_name}
                     Ссылка на профиль: https://vk.com/id{favorite.favorite_vk_id}
-
                     """
 
                     count += 1
@@ -144,19 +154,27 @@ def main():
                 )
 
             elif request == "Добавить в Черный список":
-                add_db_black_list(
-                    user_vk_id=event.user_id,
-                    black_list_id=candidate['vk_id'],
-                    first_name=candidate['first_name'],
-                    last_name=candidate['last_name']
-                )
+                if check_in_black_list(event.user_id, candidate['vk_id']):
+                    write_msg(
+                        vk_session=vk,
+                        user_id=event.user_id,
+                        message=f"{candidate['first_name']} {candidate['last_name']} (id{candidate['vk_id']}) уже есть в Черном списке.",
+                        keyboard=main_keyboard(),
+                    )
+                else:
+                    add_db_black_list(
+                        user_vk_id=event.user_id,
+                        black_list_id=candidate['vk_id'],
+                        first_name=candidate['first_name'],
+                        last_name=candidate['last_name']
+                    )
 
-                write_msg(
-                    vk_session=vk,
-                    user_id=event.user_id,
-                    message=f"{candidate['first_name']} {candidate['last_name']} (id{candidate['vk_id']}) добавлен в Черный список",
-                    keyboard=main_keyboard(),
-                )
+                    write_msg(
+                        vk_session=vk,
+                        user_id=event.user_id,
+                        message=f"{candidate['first_name']} {candidate['last_name']} (id{candidate['vk_id']}) добавлен в Черный список.",
+                        keyboard=main_keyboard(),
+                    )
 
             elif request == "Черный список":
                 user_black_list = get_db_black_list(
@@ -165,7 +183,6 @@ def main():
 
                 message = """
                                 ЧЕРНЫЙ СПИСОК
-
                                 """
                 count = 1
                 for black in user_black_list:
@@ -173,7 +190,6 @@ def main():
                                     {count}.
                                     Имя Фамилия: {black.first_name} {black.last_name}
                                     Ссылка на профиль: https://vk.com/id{black.black_list_id}
-
                                     """
 
                     count += 1
@@ -193,6 +209,6 @@ def main():
 
 if __name__ == '__main__':
     vk_user = vk_api.VkApi(token=MY_TOKEN)
-    vk = vk_api.VkApi(token=TEST_TOKEN)
+    vk = vk_api.VkApi(token=VKINDER_TOKEN)
     longpoll = VkLongPoll(vk)
     main()

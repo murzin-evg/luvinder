@@ -30,7 +30,7 @@ class IteratorCandidates:
 
         self.count = count
         self.offset = -self.count
-        self.hometown = self.user_data['city']
+        self.hometown = self.user_data['city']['title']
         self.sex = 1 if self.user_data['sex'] == 2 else 2
         self.age_from = age_from
         self.age_to = age_to
@@ -81,7 +81,7 @@ class IteratorCandidates:
         self.res['first_name'] = candidate['first_name']
         self.res['last_name'] = candidate['last_name']
         self.res['sex'] = {'id': 1, 'title': 'женский'} if candidate['sex'] == 1 else {'id': 2, 'title': 'мужской'}
-        self.res['city'] = candidate.get('city', 'Не указан')
+        self.res['city'] = candidate.get('city', {'id': 0, 'title': 'Не указан'})
         self.res['bdate'] = candidate.get('bdate', 'Не указана')
         self.res['vk_id'] = candidate['id']
         self.res['vk_link'] = 'https://vk.com/id' + str(candidate['id'])
